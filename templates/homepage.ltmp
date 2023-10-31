@@ -1,0 +1,71 @@
+include "templates/constants.ltmp";
+
+title{NAME};
+stylesheet("/ui.css");
+
+body {
+  dialog {
+    id = "creationDialog";
+    form {
+      id = "creationForm";
+      method = "dialog";
+      input {
+        type = "text"; id = "assignmentName"; name = "assignmentName";
+        placeholder = "Assignment name"; required = true;
+      };
+      br;
+      button {
+        id = "submitCreate";
+        name = "submitCreate";
+        "Submit";
+      };
+      button {
+        id = "closeCreate";
+        "Cancel";
+      };
+    };
+  };
+  h1{NAME};
+  table {
+    thead {
+      tr {
+        input {
+          type = "text"; id = "searchfield"; placeholder = "Search here";
+          name = "search"; class = "search";
+          oninput = "searchInput();";
+        };
+        select {
+          id="set"; name="set"; required="required";
+          onload = "changeList('all');";
+          foreach(db.get("/lists", true)) {
+            option {
+              onclick = "changeList('$$i');";
+              '{"name":"$$i","members":[$$db.get(/lists/$$i)]}';
+            };
+          };
+        };
+      }; tr { td {
+        button {
+          id = "showCreate"; name = "create"; class = "create";
+          "Create Assignment";
+        };
+        button {
+          id = "showCreateList"; name = "createList"; class="create";
+          "Create List";
+        };};
+    };};
+    tbody {
+      id = "searchbody";
+      foreach(db.get("/assignments", true)) {
+        tr { td {
+[[{
+  "name":"$$db.get(/assignments/$$i)",
+  "id":$$i
+  }]];
+          br;
+        }; };
+      };
+    };
+  };
+};
+script("/static/ui.js");
