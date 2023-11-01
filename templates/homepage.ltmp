@@ -104,6 +104,7 @@ body {
       "Cancel";
     };
   };
+
   dialog {
     id = "practiceDialog";
     p {
@@ -122,6 +123,28 @@ body {
       "Cancel";
     };
   };
+
+  dialog {
+    id = "assignmentEditDialog";
+    p { "Edit Assignment"; };
+    input {
+      type = "text"; placeholder = "Assignment Name";
+      id = "assignmentEditName"; required = true;
+    };
+    button {
+      id = "assignmentEditRemove";
+      "Remove";
+    }; br;
+    button {
+      id = "assignmentEditConfirm";
+      "Confirm";
+    };
+    button {
+      id = "assignmentEditCancel";
+      "Cancel";
+    };
+  };
+
   h1{NAME};
   table {
     thead {

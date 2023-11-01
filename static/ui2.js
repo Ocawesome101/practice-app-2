@@ -90,8 +90,8 @@ function buildAssignmentButton(assignment, time) {
     ");\">", assignment.name, "</button></td>");
   if (!time) {
     button = button.concat(
-      "<td><button class=\"remove\" onclick=\"confirmRemoval(", assignment.id,
-      ");\">Remove</button></td>");
+      "<td><button class=\"edit\" onclick=\"editAssignment(", assignment.id,
+      ");\">Edit</button></td>");
   } else {
     button = button.concat("<td class=\"notbutton\">",formatTime(time),"</td>")
   };
@@ -178,6 +178,41 @@ searchbar.oninput = () => {
   rebuildAssignmentList();
 };
 
+// assignment edit dialog
+const editAssignmentDialog = document.getElementById("assignmentEditDialog");
+const editAssignmentCancel = document.getElementById("assignmentEditCancel");
+const editAssignmentConfirm = document.getElementById("assignmentEditConfirm");
+const editAssignmentRemove = document.getElementById("assignmentEditRemove");
+const editAssignmentName = document.getElementById("assignmentEditName");
+
+function editAssignment(id) {
+  // another terrible misuse of an HTML feature
+  editAssignmentDialog.firstChild.id = id;
+  editAssignmentDialog.firstChild
+      .firstChild.textContent = "Edit Assignment " + id;
+  editAssignmentName.value = findAssignment(id).name;
+  editAssignmentDialog.showModal();
+}
+
+editAssignmentCancel.onclick = () => {
+  editAssignmentDialog.close();
+}
+
+editAssignmentRemove.onclick = () => {
+  confirmRemoval(parseInt(editAssignmentDialog.firstChild.id));
+  editAssignmentDialog.close();
+}
+
+editAssignmentConfirm.onclick = () => {
+  post(
+    "/api/create", "assignmentName=".concat(
+      encodeURI(editAssignmentName.value),
+      "&id=", editAssignmentDialog.firstChild.id),
+    (text) => { updateAssignments(); })
+  assignmentName.value = "";
+  editAssignmentDialog.close();
+}
+
 // assignment creation dialog
 const createAssignment = document.getElementById("showCreate");
 const createAssignmentDialog = document.getElementById("creationDialog");
@@ -197,10 +232,10 @@ cancelCreateAssignment.onclick = () => {
 createAssignmentForm.onsubmit = (e) => {
   e.preventDefault();
   createAssignmentDialog.close();
-  assignmentName.value = "";
   post(
     "/api/create", "assignmentName=".concat(encodeURI(assignmentName.value)),
     (text) => { updateAssignments(); })
+  assignmentName.value = "";
 };
 
 // list creation dialog
@@ -264,9 +299,16 @@ function toggleButton(thing) {
   }
 }
 
+let getFirstListValue = () => {
+  if (listOptions.firstChild) {
+    return listOptions.firstChild.value;
+  }
+};
+
 createList.onclick = () => {
   rebuildListOptions();
-  editingList = currentList != "all" && currentList || listOptions.firstChild.value || "";
+  editingList = currentList != "all" && currentList ||
+    getFirstListValue() || "";
   rebuildListMemberOptions();
   createListDialog.showModal();
 };
@@ -291,7 +333,8 @@ yesRemoveList.onclick = () => {
       "&listMembers="),
     (r) => { updateLists(); updateAssignments(); }
   );
-  editingList = currentList != "all" && currentList || listOptions.firstChild.value || "";
+  editingList = currentList != "all" && currentList || 
+    getFirstListValue() || "";
   rebuildListOptions();
   rebuildListMemberOptions();
 };
@@ -317,7 +360,7 @@ createListForm.onsubmit = (e) => {
   }
 
   post(
-    "/api/updatelist", "listName=".concat(editingList,
+    "/api/updatelist", "listName=".concat(encodeURI(editingList),
       "&listMembers=", encodeURI(members)),
     (r) => { updateLists(); updateAssignments(); }
   );

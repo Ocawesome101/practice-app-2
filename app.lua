@@ -48,7 +48,7 @@ end)
 
 app:post("/api/create", function(req)
   math.randomseed(os.time())
-  local id = math.random(100000,999999)
+  local id = tonumber(req.params.id or math.random(100000,999999))
   db.create("/assignments/"..id, util.unescape(req.params.assignmentName))
   ngx.print(id)
   return {skip_render = true}

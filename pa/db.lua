@@ -39,7 +39,7 @@ end
 
 function db.remove(path)
   path = DB_BASE .. "/" .. path:gsub("%.%.", "")
-  os.execute("rm -r " .. path)
+  os.execute('rm -r "' .. path .. '"')
 end
 
 return db

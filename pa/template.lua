@@ -28,8 +28,7 @@ elements = setmetatable({
     return open("script", {type="text/javascript", src=p})..close("script")
   end,
   include = function(p)
-    assert(loadfile(p, "t", elements))()
-    return ""
+    return assert(loadfile(p, "t", elements))() or ""
   end,
   foreach = function(items)
     return function(lines)
