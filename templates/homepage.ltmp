@@ -26,14 +26,21 @@ body {
       };
     };
   };
-  -- list creation dialog
+  -- list editing dialog
   dialog {
     id = "listCreationDialog";
     form {
       id = "listCreationForm";
-      input {
-        type = "text"; id = "listName"; name = "listName";
-        placeholder = "List name"; required = true;
+      select {
+        id = "listName"; name = "listName"; required = true;
+      };
+      button {
+        type = "button", id = "addList"; name = "addList";
+        "+";
+      };
+      button {
+        type = "button", id = "removeList"; name = "removeList";
+        "-";
       };
       div {
         id="listMembers"; class="listMembers";
@@ -41,14 +48,48 @@ body {
       }; br;
       button {
         id = "submitCreateList"; name = "submitCreateList";
-        "Create List";
+        "Confirm";
       };
       button {
         id = "closeCreateList"; type="button";
         "Cancel";
       };
     };
+    -- list addition dialog;
+    dialog {
+      id = "addListDialog";
+      form {
+        id = "addListForm";
+        input {
+          type = "text"; id = "addListName"; name = "addListName";
+          required = true; placeholder = "List name";
+        };
+        button {
+          id = "finishAddList"; name = "finishAddList";
+          "Add List";
+        };
+        button {
+          id = "closeAddList"; type = "button";
+          "Cancel";
+        };
+      };
+    };
+    dialog {
+      id = "confirmListRemovalDialog";
+      p {
+        "Do you really want to remove this list?";
+      };
+      button {
+        id = "yesRemoveList"; type = "button";
+        "Remove";
+      };
+      button {
+        id = "noRemoveList";
+        "Cancel";
+      };
+    };
   };
+
   dialog {
     id = "confirmRemovalDialog";
     p {
@@ -87,26 +128,32 @@ body {
       tr {
         th {
           colspan="2";
-          input {
-            type = "text"; id = "searchfield"; placeholder = "Search here";
-            name = "search"; class = "search";
-          };
           select {
             id="set"; name="set"; required="required";
           };
           button {
             id = "showCreate"; name = "create"; class = "create";
-            "Create Assignment";
+            "Add Assignment";
           };
           button {
             id = "showCreateList"; name = "createList"; class="create";
-            "Create List";
+            "Add/Edit List";
+          };
+          input {
+            type = "search"; id = "searchfield"; placeholder = "Search here";
+            name = "search"; class = "search";
           };
         };
       };
     };
     tbody {
       id = "listbody"; br;
+    };
+    thead {
+      th {
+        colspan=2;
+        "Practiced"
+      }
     };
     tbody {
       id = "practiced"; br;

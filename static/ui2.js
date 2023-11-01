@@ -34,10 +34,11 @@ let assignments = [];
 let lists = [];
 let currentList = "all";
 
-function findAssignment(id) {
-  for (let i=0; i<assignments.length; i++) {
-    if (assignments[i].id == id) {
-      return (assignments[i])
+function findAssignment(id, t) {
+  t = t || assignments;
+  for (let i=0; i<t.length; i++) {
+    if (t[i].id == id) {
+      return (t[i]);
     }
   }
 }
@@ -71,15 +72,29 @@ const listselector = document.getElementById("set");
 const listbody = document.getElementById("listbody");
 const practicedList = document.getElementById("practiced");
 
-function buildAssignmentButton(assignment, noRemove) {
+function formatTime(timer) {
+  hours = parseInt(timer / 3600, 10);
+  minutes = parseInt((timer / 60) % 60, 10);
+  seconds = parseInt(timer % 60, 10);
+
+  hours = hours < 10 ? "0" + hours : hours;
+  minutes = minutes < 10 ? "0" + minutes : minutes;
+  seconds = seconds < 10 ? "0" + seconds : seconds;
+
+  return hours + ":" + minutes + ":" + seconds;
+}
+
+function buildAssignmentButton(assignment, time) {
   let button = "".concat(
     "<td colspan=\"2\"><button class=\"practice\" onclick=\"practice(", assignment.id,
     ");\">", assignment.name, "</button></td>");
-  if (!noRemove) {
+  if (!time) {
     button = button.concat(
       "<td><button class=\"remove\" onclick=\"confirmRemoval(", assignment.id,
       ");\">Remove</button></td>");
-  }
+  } else {
+    button = button.concat("<td class=\"notbutton\">",formatTime(time),"</td>")
+  };
   return button;
 }
 
@@ -106,7 +121,7 @@ function rebuildAssignmentList(filter) {
   let processed = 0;
 
   for (let i = 0; i < assignments.length; i++) {
-    if (assignments[i].name.match(filter) != null &&
+    if (assignments[i].name.toLowerCase().match(filter.toLowerCase()) != null &&
         (currentList == "all" || lists[currentList].indexOf(assignments[i].id) != -1)) {
       html = html.concat(
         "<tr>", buildAssignmentButton(assignments[i]), "</tr>");
@@ -126,8 +141,15 @@ function rebuildPracticedList() {
   let processed = 0;
 
   for (let i = 0; i < practiced.length; i++) {
+    let assignment = findAssignment(practiced[i].id);
+    if (!assignment) {
+      assignment = {
+        name: "Removed: " + practiced[i].id,
+        id: practiced[i].id
+      }
+    }
     html = html.concat("<tr>",
-      buildAssignmentButton(findAssignment(practiced[i]), true), "</tr>");
+      buildAssignmentButton(assignment, practiced[i].time), "</tr>");
     processed++;
   }
 
@@ -138,15 +160,19 @@ function rebuildPracticedList() {
   replaceHTML(practicedList, "practiced", html);
 }
 
-function rebuildListSelector() {
-  let html = "<option onclick=\"currentList='all';rebuildAssignmentList();\">All Assignments</option>";
+function rebuildListSelector(e, c) {
+  let html = "<option value=\"all\">All Assignments</option>";
   for (name in lists) {
-    html = html.concat("<option onclick=\"currentList='", name,
-      "';rebuildAssignmentList();\">", name, "</option>");
+    html = html.concat("<option>", name, "</option>");
   }
   
   replaceHTML(listselector, "set", html);
 }
+
+listselector.onchange = (e) => {
+  currentList=e.target.value;
+  rebuildAssignmentList();
+};
 
 searchbar.oninput = () => {
   rebuildAssignmentList();
@@ -165,11 +191,13 @@ createAssignment.onclick = () => {
 
 cancelCreateAssignment.onclick = () => {
   createAssignmentDialog.close();
+  assignmentName.value = "";
 };
 
 createAssignmentForm.onsubmit = (e) => {
   e.preventDefault();
   createAssignmentDialog.close();
+  assignmentName.value = "";
   post(
     "/api/create", "assignmentName=".concat(encodeURI(assignmentName.value)),
     (text) => { updateAssignments(); })
@@ -177,17 +205,52 @@ createAssignmentForm.onsubmit = (e) => {
 
 // list creation dialog
 const createList = document.getElementById("showCreateList");
+const createListButton = document.getElementById("addList");
+const removeListButton = document.getElementById("removeList");
 const createListDialog = document.getElementById("listCreationDialog");
 const createListForm = document.getElementById("listCreationForm");
 const cancelCreateList = document.getElementById("closeCreateList");
+const listOptions = document.getElementById("listName");
 const listMembers = document.getElementById("listMembers");
-const listName = document.getElementById("listName");
 
-function rebuildListMemberOptions() {
+const addListDialog = document.getElementById("addListDialog");
+const finishAddList = document.getElementById("finishAddList");
+const closeAddList = document.getElementById("closeAddList");
+const addListName = document.getElementById("addListName");
+const addListForm = document.getElementById("addListForm");
+
+const removeListDialog = document.getElementById("confirmListRemovalDialog");
+const yesRemoveList = document.getElementById("yesRemoveList");
+const noRemoveList = document.getElementById("noRemoveList");
+
+let editingList;
+
+function rebuildListOptions(add) {
+  let html = "";
+
+  if (add) {
+    html = html.concat("<option selected>", add, "</option>");
+  }
+  for (name in lists) {
+    html = html.concat("<option>", name, "</option>");
+  }
+
+  replaceHTML(listOptions, "listName", html);
+}
+
+listOptions.onchange = (e) => {
+  editingList=e.target.value;
+  rebuildListMemberOptions();
+};
+
+function rebuildListMemberOptions(list) {
+  list = editingList || "";
   let html = "";
   for (let i = 0; i < assignments.length; i++) {
     let assignment = assignments[i];
-    html = html.concat("<button class=\"multiselect\" type=\"button\" value=",assignment.id," onclick=\"toggleButton(this);\">", assignment.name, "</button><br>");
+    let member = lists[list] && lists[list].indexOf(assignments[i].id) != -1
+    member = member || false;
+    html = html.concat("<button class=\"multiselect\" type=\"button\" value=",assignment.id," onclick=\"toggleButton(this);\"; name=\"", member.toString(), "\">", assignment.name, "</button><br>");
   }
   replaceHTML(listMembers, "listMembers", html);
 }
@@ -202,8 +265,40 @@ function toggleButton(thing) {
 }
 
 createList.onclick = () => {
-  createListDialog.showModal();
+  rebuildListOptions();
+  editingList = currentList != "all" && currentList || listOptions.firstChild.value || "";
   rebuildListMemberOptions();
+  createListDialog.showModal();
+};
+
+createListButton.onclick = () => {
+  addListDialog.showModal();
+};
+
+removeListButton.onclick = () => {
+  removeListDialog.showModal();
+};
+
+noRemoveList.onclick = () => {
+  removeListDialog.close();
+};
+
+yesRemoveList.onclick = () => {
+  removeListDialog.close();
+  delete lists[editingList];
+  post(
+    "/api/updatelist", "listName=".concat(editingList,
+      "&listMembers="),
+    (r) => { updateLists(); updateAssignments(); }
+  );
+  editingList = currentList != "all" && currentList || listOptions.firstChild.value || "";
+  rebuildListOptions();
+  rebuildListMemberOptions();
+};
+
+closeAddList.onclick = () => {
+  addListDialog.close();
+  addListName.value = "";
 };
 
 cancelCreateList.onclick = () => {
@@ -222,10 +317,19 @@ createListForm.onsubmit = (e) => {
   }
 
   post(
-    "/api/updatelist", "listName=".concat(listName.value,
+    "/api/updatelist", "listName=".concat(editingList,
       "&listMembers=", encodeURI(members)),
     (r) => { updateLists(); updateAssignments(); }
   );
+}
+
+addListForm.onsubmit = (e) => {
+  e.preventDefault();
+  addListDialog.close();
+  editingList = addListName.value;
+  rebuildListOptions(editingList);
+  rebuildListMemberOptions();
+  addListName.value = "";
 }
 
 const removalDialog = document.getElementById("confirmRemovalDialog");
@@ -257,23 +361,15 @@ const practiceTimer = document.getElementById("practiceTimer");
 
 function practice(id) {
   let assignment = findAssignment(id);
+  let practiceEntry = findAssignment(id, practiced) || {time:0};
   practiceDialog.showModal();
   practiceText.firstChild.textContent = "Practicing " + assignment.name + " ";
-  practiceTimer.textContent = "00:00:00";
+  practiceTimer.textContent = "--:--:--";
 
-  let timer = 0, hours, minutes, seconds;
+  let timer = practiceEntry.time, hours, minutes, seconds;
   let timerID = setInterval(function() {
     timer++;
-
-    hours = parseInt(timer / 3600, 10);
-    minutes = parseInt((timer / 60) % 60, 10);
-    seconds = parseInt(timer % 60, 10);
-
-    hours = hours < 10 ? "0" + hours : hours;
-    minutes = minutes < 10 ? "0" + minutes : minutes;
-    seconds = seconds < 10 ? "0" + seconds : seconds;
-
-    practiceTimer.textContent = hours + ":" + minutes + ":" + seconds;
+    practiceTimer.textContent = formatTime(timer);
   }, 1000)
 
   practiceCancel.onclick = () => {
@@ -283,6 +379,7 @@ function practice(id) {
 
   practiceDone.onclick = () => {
     practiceDialog.close();
+    clearInterval(timerID);
 
     post("/api/practice", "id=" + assignment.id + "&time=" + timer,
       (r) => { updatePracticed(); });

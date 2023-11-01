@@ -7,6 +7,10 @@ local db = require("pa.db")
 local util = require("lapis.util")
 local app = lapis.Application()
 
+local function date()
+  return os.date("%Y-%m-%d")
+end
+
 app:get("/", function()
   return tmpl("templates/homepage.ltmp")
 end)
@@ -22,6 +26,14 @@ app:get("/api/assignments", function()
 end)
 
 app:get("/api/practiced", function()
+  local a, ids = pcall(db.get, "/practiced/" .. date())
+  if not a then ids = {} end
+  local resp = {}
+  for i=1, #ids do
+    resp[#resp+1] = {id=ids[i], time=db.get("/practiced/"..date().."/"..ids[i])}
+  end
+  ngx.print(util.to_json(resp))
+  return {skip_render = true}
 end)
 
 app:get("/api/lists", function()
@@ -43,14 +55,24 @@ app:post("/api/create", function(req)
 end)
 
 app:post("/api/updatelist", function(req)
-  db.createDir("/lists/"..req.params.listName)
-  for mem in req.params.listMembers:gmatch("[^,]+") do
-    db.create("/lists/"..req.params.listName.."/"..mem)
+  db.remove("/lists/"..req.params.listName)
+  if req.params.listMembers and #req.params.listMembers > 0 then
+    db.createDir("/lists/"..req.params.listName)
+    for mem in req.params.listMembers:gmatch("[^,]+") do
+      db.create("/lists/"..req.params.listName.."/"..mem)
+    end
   end
   return {skip_render = true}
 end)
 
 app:post("/api/practice", function(req)
+  pcall(db.createDir, "/practiced/" .. date())
+  db.create("/practiced/"..date().."/"..req.params.id, req.params.time)
+  return {skip_render = true}
+end)
+
+app:post("/api/remove", function(req)
+  pcall(db.remove, "/assignments/"..req.params.id)
 end)
 
 return app
