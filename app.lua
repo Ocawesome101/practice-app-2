@@ -21,6 +21,9 @@ app:get("/api/assignments", function()
   return {skip_render = true}
 end)
 
+app:get("/api/practiced", function()
+end)
+
 app:get("/api/lists", function()
   local names = db.get("/lists")
   local resp = {}
@@ -45,6 +48,9 @@ app:post("/api/updatelist", function(req)
     db.create("/lists/"..req.params.listName.."/"..mem)
   end
   return {skip_render = true}
+end)
+
+app:post("/api/practice", function(req)
 end)
 
 return app

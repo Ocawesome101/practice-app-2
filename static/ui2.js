@@ -59,6 +59,8 @@ function updateLists() {
 
 function updatePracticed() {
   get("/api/practiced", (resp) => {
+    practiced = JSON.parse(resp);
+    rebuildPracticedList();
   });
 }
 
@@ -67,13 +69,18 @@ function updatePracticed() {
 const searchbar = document.getElementById("searchfield");
 const listselector = document.getElementById("set");
 const listbody = document.getElementById("listbody");
+const practicedList = document.getElementById("practiced");
 
-function buildAssignmentButton(assignment) {
-  return "".concat(
+function buildAssignmentButton(assignment, noRemove) {
+  let button = "".concat(
     "<td colspan=\"2\"><button class=\"practice\" onclick=\"practice(", assignment.id,
-    ");\">", assignment.name, "</button>",
-    "<td><button class=\"remove\" onclick=\"confirmRemoval(", assignment.id,
-    ");\">Remove</button></td>");
+    ");\">", assignment.name, "</button></td>");
+  if (!noRemove) {
+    button = button.concat(
+      "<td><button class=\"remove\" onclick=\"confirmRemoval(", assignment.id,
+      ");\">Remove</button></td>");
+  }
+  return button;
 }
 
 //https://stackoverflow.com/questions/814564/inserting-html-elements-with-javascript
@@ -112,6 +119,23 @@ function rebuildAssignmentList(filter) {
   }
 
   replaceHTML(listbody, "listbody", html);
+}
+
+function rebuildPracticedList() {
+  let html = "";
+  let processed = 0;
+
+  for (let i = 0; i < practiced.length; i++) {
+    html = html.concat("<tr>",
+      buildAssignmentButton(findAssignment(practiced[i]), true), "</tr>");
+    processed++;
+  }
+
+  if (processed == 0) {
+    html = "<tr><td>Nothing practiced yet</td></tr>";
+  }
+
+  replaceHTML(practicedList, "practiced", html);
 }
 
 function rebuildListSelector() {
