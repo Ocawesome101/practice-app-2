@@ -1,0 +1,63 @@
+* {
+  font-size: 2vh;
+}
+
+body {
+  background: lightBlue;
+}
+
+.centerme {
+  margin: auto;
+}
+
+.practice {
+  width: 100%;
+  text-align: left;
+}
+
+table {
+  margin: auto;
+}
+
+thead {
+  text-align: left;
+}
+
+select {
+  -webkit-appearance: none;
+}
+
+input {
+  margin: 4px;
+}
+
+button, select, input {
+  border: none;
+  padding: 2vh;
+  height: 100%;
+  color: black;
+  border-radius: 6px;
+}
+
+.multiselect {
+  background-color: lightGray;
+  color: black;
+  width: 100%;
+  text-align: left;
+}
+
+.multiselect[name="true"] {
+  background-color: blue;
+  color: white;
+}
+
+dialog {
+  border-radius: 16px;
+  border: none;
+  box-shadow: 12px;
+}
+
+dialog::backdrop {
+  background-color: #000;
+  opacity: 0.5;
+}

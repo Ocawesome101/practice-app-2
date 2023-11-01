@@ -32,4 +32,14 @@ function db.create(path, content)
   handle:close()
 end
 
+function db.createDir(path)
+  path = DB_BASE .. "/" .. path:gsub("%.%.", "")
+  assert(stat.mkdir(path))
+end
+
+function db.remove(path)
+  path = DB_BASE .. "/" .. path:gsub("%.%.", "")
+  os.remove(path)
+end
+
 return db

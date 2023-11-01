@@ -1,9 +1,10 @@
 include "templates/constants.ltmp";
 
 title{NAME};
-stylesheet("/ui.css");
+stylesheet("/static/ui.css");
 
 body {
+  -- assignment creation dialog
   dialog {
     id = "creationDialog";
     form {
@@ -17,55 +18,100 @@ body {
       button {
         id = "submitCreate";
         name = "submitCreate";
-        "Submit";
+        "Create Assignment";
       };
       button {
-        id = "closeCreate";
+        id = "closeCreate"; type="button";
         "Cancel";
       };
+    };
+  };
+  -- list creation dialog
+  dialog {
+    id = "listCreationDialog";
+    form {
+      id = "listCreationForm";
+      input {
+        type = "text"; id = "listName"; name = "listName";
+        placeholder = "List name"; required = true;
+      };
+      div {
+        id="listMembers"; class="listMembers";
+        required = true;
+      }; br;
+      button {
+        id = "submitCreateList"; name = "submitCreateList";
+        "Create List";
+      };
+      button {
+        id = "closeCreateList"; type="button";
+        "Cancel";
+      };
+    };
+  };
+  dialog {
+    id = "confirmRemovalDialog";
+    p {
+      "Do you really want to remove this assignment?";
+    };
+    button {
+      id = "yesRemove"; type = "button";
+      "Remove";
+    };
+    button {
+      id = "noRemove";
+      "Cancel";
+    };
+  };
+  dialog {
+    id = "practiceDialog";
+    p {
+      id = "practiceText";
+      "Placeholder";
+      b {
+        id = "practiceTimer"; "Timer";
+      };
+    };
+    button {
+      id = "donePractice"; type = "button";
+      "Mark Practice";
+    };
+    button {
+      id = "cancelPractice";
+      "Cancel";
     };
   };
   h1{NAME};
   table {
     thead {
       tr {
-        input {
-          type = "text"; id = "searchfield"; placeholder = "Search here";
-          name = "search"; class = "search";
-          oninput = "searchInput();";
-        };
-        select {
-          id="set"; name="set"; required="required";
-          onload = "changeList('all');";
-          foreach(db.get("/lists", true)) {
-            option {
-              onclick = "changeList('$$i');";
-              '{"name":"$$i","members":[$$db.get(/lists/$$i)]}';
-            };
+        th {
+          colspan="2";
+          input {
+            type = "text"; id = "searchfield"; placeholder = "Search here";
+            name = "search"; class = "search";
+          };
+          select {
+            id="set"; name="set"; required="required";
+          };
+          button {
+            id = "showCreate"; name = "create"; class = "create";
+            "Create Assignment";
+          };
+          button {
+            id = "showCreateList"; name = "createList"; class="create";
+            "Create List";
           };
         };
-      }; tr { td {
-        button {
-          id = "showCreate"; name = "create"; class = "create";
-          "Create Assignment";
-        };
-        button {
-          id = "showCreateList"; name = "createList"; class="create";
-          "Create List";
-        };};
-    };};
-    tbody {
-      id = "searchbody";
-      foreach(db.get("/assignments", true)) {
-        tr { td {
-[[{
-  "name":"$$db.get(/assignments/$$i)",
-  "id":$$i
-  }]];
-          br;
-        }; };
       };
+    };
+    tbody {
+      id = "listbody"; br;
+    };
+    tbody {
+      id = "practiced"; br;
     };
   };
 };
-script("/static/ui.js");
+
+script("/static/ui2.js");

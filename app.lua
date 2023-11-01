@@ -12,14 +12,22 @@ app:get("/", function()
 end)
 
 app:get("/api/assignments", function()
-  ngx.print(util.to_json(db.get("/assignments")))
-  return {
-    skip_render = true,
-  }
+  local ids = db.get("/assignments")
+  local resp = {}
+  for i=1, #ids do
+    resp[#resp+1] = {name=db.get("/assignments/"..ids[i]), id=ids[i]}
+  end
+  ngx.print(util.to_json(resp))
+  return {skip_render = true}
 end)
 
 app:get("/api/lists", function()
-  ngx.print(util.to_json(db.get("/lists")))
+  local names = db.get("/lists")
+  local resp = {}
+  for i=1, #names do
+    resp[names[i]] = db.get("/lists/"..names[i])
+  end
+  ngx.print(util.to_json(resp))
   return {skip_render = true}
 end)
 
@@ -28,7 +36,15 @@ app:post("/api/create", function(req)
   local id = math.random(100000,999999)
   db.create("/assignments/"..id, util.unescape(req.params.assignmentName))
   ngx.print(id)
-  return {skip_render = true, redirect_to = "/"}
+  return {skip_render = true}
+end)
+
+app:post("/api/updatelist", function(req)
+  db.createDir("/lists/"..req.params.listName)
+  for mem in req.params.listMembers:gmatch("[^,]+") do
+    db.create("/lists/"..req.params.listName.."/"..mem)
+  end
+  return {skip_render = true}
 end)
 
 return app
